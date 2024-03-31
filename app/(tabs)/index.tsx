@@ -1,5 +1,5 @@
 import React, { useState, useEffect } from 'react';
-import { SafeAreaView, View, Text, StyleSheet, ScrollView, Dimensions } from 'react-native';
+import { SafeAreaView, View, Text, StyleSheet, ScrollView, Dimensions, TouchableOpacity, Linking  } from 'react-native';
 import MapView, { Marker, Callout } from 'react-native-maps';
 import * as Location from 'expo-location';
 import Parse from 'parse/react-native';
@@ -33,6 +33,33 @@ const HomePage = () => {
   // Adjust the map's height dynamically based on safe area insets
   const dynamicMapHeight = (Dimensions.get('window').height - insets.top - insets.bottom) * 0.5;
   
+
+
+   // Example disease names and colors
+   const diseaseNames = [
+    { name: 'Malaria', color: '#FF6347' },
+    { name: 'COVID-19', color: '#1E90FF' },
+    { name: 'Tuberculosis', color: '#32CD32' },
+    { name: 'Diabetes', color: '#FFD700' },
+    { name: 'Hypertension', color: '#FF69B4' },
+  ];
+
+  // News briefings data - replace URLs with actual article links
+  const newsBriefings = [
+    { title: 'Latest Developments on Malaria', url: 'http://example.com/malaria' },
+    { title: 'COVID-19: What You Need to Know', url: 'http://example.com/covid' },
+    // Add more news briefings as needed
+  ];
+
+  // Overview data
+  const overviewStats = [
+    { label: 'Total Diseases Tracked', count: 120 },
+    { label: 'Symptoms Reported', count: 450 },
+    // Add more statistics as needed
+  ];
+
+
+
 
   const [location, setLocation] = useState<{
     latitude: number;
@@ -110,6 +137,7 @@ const HomePage = () => {
             latitude: location.latitude,
             longitude: location.longitude,
             name: s.get("symptom"), // Assuming you have a 'name' field in your Parse class
+            color: getColorForDisease(index), 
           };
         }).filter(Boolean);// Ensure no null entries
     
@@ -128,9 +156,14 @@ const HomePage = () => {
     }
   }, [activeMapIndex]);
 
+  function getColorForDisease(index) {
+    const colors = ['#FF6347', '#1E90FF', '#32CD32', '#FFD700', '#FF69B4'];
+    return colors[index % colors.length];
+  }
+
 
   return (
-    <SafeAreaView style={{ flex: 1 }}>
+    <SafeAreaView style={{ flex: 1}}>
       {/* Label indicating the current map */}
       <View style={styles.labelContainer}>
         <Text style={styles.mapLabel}>
@@ -139,6 +172,7 @@ const HomePage = () => {
       </View>
 
       <ScrollView
+        
         horizontal
         pagingEnabled
         showsHorizontalScrollIndicator
@@ -149,7 +183,7 @@ const HomePage = () => {
         }}
       >
  {/* Diseases Map with rounded edges */}
-<View style={[styles.mapContainer, { width: screenWidth, borderRadius: 20, overflow: 'hidden' }]}>
+<View style={[styles.mapContainer, { width: screenWidth,  borderRadius: 20, overflow: 'hidden' }]}>
   <MapView
     style={[styles.map, {height: dynamicMapHeight}]}
     initialRegion={location}
@@ -193,11 +227,39 @@ const HomePage = () => {
 ))}
   </MapView>
 </View>
+</ScrollView>
 
-      </ScrollView>
+{/* Displaying disease names */}
+<View style={styles.diseaseContainer}>
+          {diseases.map((disease, index) => (
+            <Text key={index} style={[styles.diseaseName, { color: disease.color }]}>{disease.name}</Text>
+          ))}
+        </View>
+
+        {/* News Briefings Section */}
+        <Text style={styles.sectionHeader}>News Briefings</Text>
+        {newsBriefings.map((news, index) => (
+          <TouchableOpacity key={index} style={styles.newsItem} onPress={() => Linking.openURL(news.url)}>
+            <Text style={styles.newsTitle}>{news.title}</Text>
+          </TouchableOpacity>
+        ))}
+
+        {/* Overview Stats Section */}
+        <Text style={styles.sectionHeader}>Overview</Text>
+        <View style={styles.overviewContainer}>
+          {overviewStats.map((stat, index) => (
+            <View key={index} style={styles.statCard}>
+              <Text style={styles.statCount}>{stat.count}</Text>
+              <Text style={styles.statLabel}>{stat.label}</Text>
+            </View>
+          ))}
+        </View>
+      
     </SafeAreaView>
   );
 };
+
+
 
  
 const styles = StyleSheet.create({
@@ -207,6 +269,63 @@ const styles = StyleSheet.create({
   mapContainer: {
     // Width is set inline to take full screen width
     // Height adjustments are now inline, respecting the safe area
+  },
+  diseaseContainer: {
+    flexDirection: 'row',
+    justifyContent: 'space-around',
+    paddingVertical: 10,
+  },
+  diseaseName: {
+    fontSize: 10,
+  },
+  sectionHeader: {
+    fontSize: 20,
+    fontWeight: 'bold',
+    marginTop: 20,
+    marginBottom: 10,
+    marginRight:10,
+    justifyContent: 'space-around',
+  },
+  newsItem: {
+    backgroundColor: 'white',
+    padding: 20,
+    borderRadius: 10,
+    marginHorizontal: 20,
+    marginVertical: 10,
+    shadowColor: '#000',
+    shadowOffset: {
+      width: 0,
+      height: 5,
+    }
+  },
+  newsTitle: {
+    fontSize: 16,
+    color: '#0000ff',
+    textDecorationLine: 'underline',
+  },
+  overviewContainer: {
+    flexDirection: 'row',
+    flexWrap: 'wrap',
+    justifyContent: 'space-between',
+  },
+  statCard: {
+    backgroundColor: 'white',
+    padding: 10,
+    borderRadius: 10,
+    marginHorizontal: 10,
+    marginVertical: 10,
+    shadowColor: '#000',
+    shadowOffset: {
+      width: 0,
+      height: 5,
+    }
+  },
+  statCount: {
+    fontSize: 24,
+    fontWeight: 'bold',
+  },
+  statLabel: {
+    fontSize: 16,
   },
   map: {
     // Width and height adjustments are now inline

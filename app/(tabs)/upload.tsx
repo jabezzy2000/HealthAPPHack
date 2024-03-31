@@ -123,8 +123,7 @@ const App = () => {
         const authToken = "exampleAuthToken";
         const apiEndpoint = '/compute'; // Endpoint for your Python API
   
-        // Fetch the file content
-        const fileContent = await fetch(result.uri);
+        
         const textContent = await fileContent.text();
   
         // Convert CSV text to JSON array

@@ -53,7 +53,7 @@ export default function PathwayPage() {
         />
         <View style={styles.headerTextContainer}>
           <Text style={styles.headerTitle}>Here are some AI generated Ideas you should consider.</Text>
-          <Text style={styles.headerSubtitle}>These suggestions are made based on thousands of data from individuals around you.</Text>
+          <Text style={styles.headerSubtitle}>These suggestions are made based on symptoms data from you and individuals around you.</Text>
         </View>
         <ScrollView style={styles.scrollView} showsVerticalScrollIndicator={false}>
           {suggestions.map(suggestion => (
