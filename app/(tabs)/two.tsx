@@ -1,41 +1,59 @@
-import React from 'react';
-import { ScrollView, View, Image, Text, StyleSheet } from 'react-native';
+import React, { useState, useEffect } from 'react';
+import { ScrollView, View, Image, Text, StyleSheet, Dimensions } from 'react-native';
 import MapView from 'react-native-maps';
+import Parse from 'parse/react-native'; // Ensure Parse is imported
 
 const ProfilePage = () => {
+  // Assuming you have a state for the user's information
+  const [user, setUser] = useState({ email: 'example@email.com', username: 'John Doe' });
+
+  useEffect(() => {
+    // Fetch and set the user information here
+  }, []);
+
   return (
     <ScrollView contentContainerStyle={styles.container}>
       {/* Profile Picture */}
-      <Image
-        source={require('./tttttt.png')} // Replace with your profile picture source
-        style={styles.profilePicture}
-      />
+      <View style={styles.profilePicContainer}>
+        <Image
+          source={require('/Users/jabezagyemang-prempeh/Desktop/midnight-hack/HealthAPPHack/app/(tabs)/tttttt.png')} // Replace with your profile picture source
+          style={styles.profilePicture}
+        />
+      </View>
 
       {/* User Information */}
-      <Text style={styles.emailText}>example@email.com</Text>
-      <Text style={styles.nameText}>John Doe</Text>
-      <Text style={styles.headerText}>Profile</Text>
+      <View style={styles.userInfoSection}>
+        <Text style={styles.emailText}>{user.email}</Text>
+        <Text style={styles.nameText}>{user.username}</Text>
+      </View>
 
-      {/* Recent Analysis */}
-      <Text style={styles.recentAnalysisHeader}>Recent Analysis</Text>
+      <View style={styles.section}>
+        <Text style={styles.headerText}>Profile</Text>
+      </View>
 
-      {/* First Map */}
+      {/* Recent Analysis Header */}
+      <View style={styles.section}>
+        <Text style={styles.recentAnalysisHeader}>Recent Analysis</Text>
+      </View>
+
+      {/* Maps */}
       <View style={styles.mapContainer}>
-          <MapView
-            style={styles.map}
-            initialRegion={{
-              latitude: 38.89511, // Example coordinates for Washington, DC
-              longitude: -77.03637,
-              latitudeDelta: 0.0922,
-              longitudeDelta: 0.0421,
-            }}
-          />
-        </View>
+        <MapView
+          style={styles.map}
+          initialRegion={{
+            latitude: 38.89511, // Example coordinates for Washington, DC
+            longitude: -77.03637,
+            latitudeDelta: 0.0922,
+            longitudeDelta: 0.0421,
+          }}
+        />
+      </View>
 
-      {/* Second Map */}
-      <MapView style={styles.map} />
+      <View style={styles.mapContainer}>
+        <MapView style={styles.map} />
+      </View>
 
-      {/* Text Aligned to the Right */}
+      {/* Right-aligned Text */}
       <View style={styles.rightAlignedTextContainer}>
         <Text style={styles.rightAlignedText}>Some text aligned to the right</Text>
       </View>
@@ -46,23 +64,24 @@ const ProfilePage = () => {
 const styles = StyleSheet.create({
   container: {
     flexGrow: 1,
+    alignItems: 'center',
     padding: 20,
   },
-  mapContainer: {
-    height: '30%', // Increased from 25% to 30% for more length
-    borderRadius: 20, // Adds rounded corners
-    overflow: 'hidden', // Ensures the map view respects the container's borderRadius
-    margin: 10, // Optional: adds some margin around the map for spacing
+  profilePicContainer: {
+    marginBottom: 20,
   },
   profilePicture: {
-    width: 100,
-    height: 100,
-    borderRadius: 50,
+    width: 120,
+    height: 120,
+    borderRadius: 60, // Make the image rounded
+  },
+  userInfoSection: {
+    alignItems: 'center', // Center align the user information
     marginBottom: 20,
   },
   emailText: {
     fontSize: 16,
-    marginBottom: 10,
+    marginBottom: 5,
   },
   nameText: {
     fontSize: 20,
@@ -79,13 +98,24 @@ const styles = StyleSheet.create({
     fontWeight: 'bold',
     marginBottom: 10,
   },
+  section: {
+    width: '100%', // Ensure the content uses full width available
+    alignItems: 'center', // Center align content
+    marginBottom: 20,
+  },
+  mapContainer: {
+    width: Dimensions.get('window').width - 40, // Subtract horizontal paddings
+    height: 200,
+    borderRadius: 20,
+    overflow: 'hidden', // Ensure the map respects the container's borderRadius
+    marginBottom: 20,
+  },
   map: {
-    width: '100%', // Take full width
-    aspectRatio: 1, // Maintain aspect ratio
-    marginBottom: 20, // Add margin between maps
+    width: '100%',
+    height: '100%',
   },
   rightAlignedTextContainer: {
-    alignItems: 'flex-end',
+    alignSelf: 'flex-end', // Align the container to the right
     marginBottom: 20,
   },
   rightAlignedText: {
