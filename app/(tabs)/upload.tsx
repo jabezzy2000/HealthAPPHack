@@ -4,6 +4,8 @@ import AsyncStorage from '@react-native-async-storage/async-storage';
 import { ScrollView, View, Button, TextInput, StyleSheet, TouchableOpacity, Text } from 'react-native';
 import * as Location from 'expo-location';
 import * as DocumentPicker from 'expo-document-picker';
+import * as FileSystem from 'expo-file-system';
+import { Alert } from 'react-native';
 
 Parse.setAsyncStorage(AsyncStorage);
 Parse.initialize("gnQ5OLyRrsSME4wp1F6c1iVa6x5HD5IKIMY2MMBG", "x2KL2OTnMjOhzSXgQJBpxyDq3nTDFEzWMMN7chMX");
@@ -90,9 +92,28 @@ const App = () => {
   const handleFileUpload = async () => {
     let result = await DocumentPicker.getDocumentAsync({});
     if (result.type === 'success') {
-      console.log(result);
-      // Placeholder for actual file upload logic
-      Alert.alert('File Selected', 'Your file has been selected successfully.');
+      // Read the File Content
+      const fileContent = await FileSystem.readAsStringAsync(result.uri);
+  
+      // Send to your Flask API
+      try {
+        const response = await fetch('http://<your-api-url>/compute', {
+          method: 'POST',
+          headers: {
+            'Content-Type': 'application/json',
+          },
+          body: JSON.stringify({content: fileContent}),
+        });
+  
+        const jsonResponse = await response.json();
+        console.log("Computed Results from API:", jsonResponse);
+  
+        // Handle the computed results as needed
+        Alert.alert('Computation Complete', `Computed result: ${jsonResponse.result}`);
+      } catch (error) {
+        console.error("Failed to send data to API:", error);
+        Alert.alert('Error', 'Failed to process file.');
+      }
     }
   };
 
@@ -137,97 +158,7 @@ const App = () => {
 
 
  
-  
-// return (
-//   <ScrollView contentContainerStyle={styles.container}>
-//     <View style={styles.formContainer}>
-//       <View style={styles.buttonContainer}>
-//         <Button
-//           title="Symptoms"
-//           onPress={() => handleButtonPress('Symptoms')}
-//           color={selectedButton === 'Symptoms' ? '#4A90E2' : '#ccc'}
-//         />
-//         <View style={styles.spacer} />
-//         <Button
-//           title="Sickness"
-//           onPress={() => handleButtonPress('Sickness')}
-//           color={selectedButton === 'Sickness' ? '#4A90E2' : '#ccc'}
-//         />
-//       </View>
-//       {selectedButton === 'Symptoms' && (
-//         <View style={styles.inputContainer}>
-//           <TextInput
-//             style={styles.input}
-//             onChangeText={(text) => handleInputChange('symptoms', text)}
-//             value={formData.symptoms}
-//             placeholder="Symptoms"
-//             placeholderTextColor="#000000"
-//           />
-//           <TextInput
-//             style={styles.input}
-//             onChangeText={(text) => handleInputChange('startDate', text)}
-//             value={formData.startDate}
-//             placeholder="Start Date (YYYY-MM-DD)"
-//             placeholderTextColor="#000000"
-//           />
-//           <TextInput
-//             style={styles.input}
-//             onChangeText={(text) => handleInputChange('endDate', text)}
-//             value={formData.endDate}
-//             placeholder="End Date (YYYY-MM-DD)"
-//             placeholderTextColor="#000000"
-//             editable={!present}
-//           />
-//           <TextInput
-//             style={styles.input}
-//             onChangeText={(text) => handleInputChange('diagnosisName', text)}
-//             value={formData.diagnosisName}
-//             placeholder="Name of Diagnosis"
-//             placeholderTextColor="#000000"
-//           />
-//         </View>
-//       )}
-//       {selectedButton === 'Sickness' && (
-//         <View style={styles.inputContainer}>
-//           <TextInput
-//             style={styles.input}
-//             onChangeText={(text) => handleInputChange('dateOfDiagnosis', text)}
-//             value={formData.dateOfDiagnosis}
-//             placeholder="Date of Diagnosis (YYYY-MM-DD)"
-//             placeholderTextColor="#000000"
-//           />
-//           <TextInput
-//             style={styles.input}
-//             onChangeText={(text) => handleInputChange('modeOfConfirmation', text)}
-//             value={formData.modeOfConfirmation}
-//             placeholder="Mode of Confirmation"
-//             placeholderTextColor="#000000"
-//           />
-//           <TextInput
-//             style={styles.input}
-//             onChangeText={(text) => handleInputChange('diagnosisName', text)}
-//             value={formData.diagnosisName}
-//             placeholder="Name of Diagnosis"
-//             placeholderTextColor="#000000"
-//           />
-//           <TextInput
-//             style={styles.input}
-//             onChangeText={(text) => handleInputChange('diagnosisName', text)}
-//             value={formData.diagnosisName}
-//             placeholder="Name of Diagnosis"
-//             placeholderTextColor="#000000"
-//           />
-//           {/* Additional TextInput for age was not shown for Sickness, but you can add it if needed */}
-//         </View>
-//       )}
-//       <TouchableOpacity style={styles.submitButton} onPress={handleSubmit}>
-//         <Text style={styles.submitButtonText}>Submit</Text>
-//       </TouchableOpacity>
-//     </View>
-//   </ScrollView>
-// );
 
-// };
 
 const renderContentBasedOnUserType = () => {
   if (userType === 'Individual') {
