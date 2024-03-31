@@ -7,7 +7,7 @@ const ProfilePage = () => {
     <ScrollView contentContainerStyle={styles.container}>
       {/* Profile Picture */}
       <Image
-        source={require('./profile-picture.jpg')} // Replace with your profile picture source
+        source={require('./tttttt.png')} // Replace with your profile picture source
         style={styles.profilePicture}
       />
 
