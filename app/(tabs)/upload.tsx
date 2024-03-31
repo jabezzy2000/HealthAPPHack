@@ -1,8 +1,7 @@
 import React, { useState } from 'react';
 import AsyncStorage from '@react-native-async-storage/async-storage';
 import { ScrollView, View, Button, TextInput, StyleSheet, TouchableOpacity, Text } from 'react-native';
-import Geolocation from 'react-native-geolocation-service';
-
+import * as Location from 'expo-location';
 
 const App = () => {
   const [selectedButton, setSelectedButton] = useState(null);
@@ -19,6 +18,7 @@ const App = () => {
 
   const handleButtonPress = (buttonName) => {
     setSelectedButton(buttonName);
+    // Reset form data when switching between Symptoms and Sickness
     setFormData({
       dateOfDiagnosis: '',
       modeOfConfirmation: '',
@@ -31,146 +31,78 @@ const App = () => {
   };
 
   const handleInputChange = (fieldName, value) => {
-    setFormData({
-      ...formData,
+    setFormData(prevState => ({
+      ...prevState,
       [fieldName]: value,
-    });
+    }));
   };
 
   const handleCheckboxChange = () => {
     setPresent(!present);
-    if (!present) { // Check if changing to present, clear 'endDate'
-      handleInputChange('endDate', '');
+    if (!present) {
+      // If checkbox is checked (present becomes true), clear 'endDate'
+      setFormData(prevState => ({
+        ...prevState,
+        endDate: '',
+      }));
     }
+  };
+
+  const getCurrentUserId = async () => {
+    // Retrieve user's ID stored in AsyncStorage
+    return await AsyncStorage.getItem('userId');
+  };
+
+  const getCurrentLocation = async () => {
+    let { status } = await Location.requestForegroundPermissionsAsync();
+    if (status !== 'granted') {
+      console.error('Permission to access location was denied');
+      return;
+    }
+    let location = await Location.getCurrentPositionAsync({});
+    return location.coords;
   };
 
   const handleSubmit = async () => {
     try {
-      // Fetch user ID and location as before
       const userId = await getCurrentUserId();
       const location = await getCurrentLocation();
       const authToken = await AsyncStorage.getItem('authToken');
-  
-      let apiEndpoint;
-      let data;
-  
-      if (selectedButton === 'Symptoms') {
-        apiEndpoint = '/submit_symptom';
-        data = {
-          user_id: userId,
-          name: formData.symptoms, // Assuming 'name' represents the symptoms described
-          description: '', // Add any additional details if necessary
-          location: location, // Structure this based on your backend requirements
-        };
-      } else if (selectedButton === 'Sickness') {
-        apiEndpoint = '/submit_disease';
-        data = {
-          user_id: userId,
-          name: formData.diagnosisName,
-          description: formData.modeOfConfirmation, // Using modeOfConfirmation as description here
-          location: location,
-          // Add other disease-specific fields as necessary
-        };
-      } else {
-        console.error('No selected button.');
-        return; // Early return if no button is selected
+
+      if (!userId || !location || !authToken) {
+        console.error('Missing userId, location, or authToken');
+        return;
       }
-  
+
+      let apiEndpoint = selectedButton === 'Symptoms' ? '/submit_symptom' : '/submit_disease';
+      let data = {
+        user_id: userId,
+        location,
+        ...formData,
+      };
+
       const response = await fetch(`http://10.26.140.164${apiEndpoint}`, {
         method: 'POST',
         headers: {
           'Content-Type': 'application/json',
-          'Authorization': `Bearer ${authToken}`, // Ensure you have the auth token available
+          'Authorization': `Bearer ${authToken}`,
         },
         body: JSON.stringify(data),
       });
-  
+
       const responseData = await response.json();
       if (response.ok) {
         console.log('Submission Successful', responseData);
-        // Handle successful submission
+        // Reset form or navigate to another screen
       } else {
         console.error('Submission Failed', responseData.error);
-        // Handle submission failure
       }
     } catch (error) {
       console.error('Error in submission', error);
-      // Handle other errors
     }
   };
-  
 
-  // const handleSubmit = async () => {
-  //   try {
-  //     const userId = await getCurrentUserId(); 
-  //     const location = await getCurrentLocation(); 
   
-  //     // Set the API endpoint based on the selected button
-  //     let apiEndpoint;
-  //     if (selectedButton === 'Symptoms') {
-  //       apiEndpoint = '/submit_symptom';
-  //     } else if (selectedButton === 'Sickness') {
-  //       apiEndpoint = '/submit_disease';
-  //     } else {
-  //       console.error('No selected button.');
-  //       return; // Early return if no button is selected
-  //     }
-  
-  //     // Prepare the data object based on the form data and selected button
-  //     const data = {
-  //       user_id: userId,
-  //       // Assuming the structure for both disease and symptom submission is similar
-  //       name: selectedButton === 'Symptoms' ? formData.symptoms : formData.diagnosisName,
-  //       description: formData.modeOfConfirmation, // Example field
-  //       location: location, // Assuming you're submitting location as an object
-  //     };
-  
-  //     // Make the API call
-  //     const response = await fetch(`http://yourapi.com${apiEndpoint}`, {
-  //       method: 'POST',
-  //       headers: {
-  //         'Content-Type': 'application/json',
-  //         'Authorization': `Bearer ${yourAuthToken}`, // Ensure you have the auth token available
-  //       },
-  //       body: JSON.stringify(data),
-  //     });
-  
-  //     const responseData = await response.json();
-  //     if (response.ok) {
-  //       console.log('Submission Successful', responseData);
-  //       // Handle successful submission (e.g., show a message or navigate to a different screen)
-  //     } else {
-  //       console.error('Submission Failed', responseData.error);
-  //       // Handle failure (e.g., show an error message to the user)
-  //     }
-  //   } catch (error) {
-  //     console.error('Error in submission', error);
-  //     // Handle other errors, such as network issues or JSON parsing errors
-  //   }
-  // };
-  
-
-  const getCurrentUserId = () => {
-    // This example assumes you have the user's ID stored in AsyncStorage after they log in
-    return AsyncStorage.getItem('userId');
-    // Make sure to handle the promise returned by getItem in your code
-  };
-
-  const getCurrentLocation = () => {
-    return new Promise((resolve, reject) => {
-      Geolocation.getCurrentPosition(
-        (position) => {
-          resolve(position.coords);
-        },
-        (error) => {
-          reject(error);
-        },
-        { enableHighAccuracy: true, timeout: 15000, maximumAge: 10000 }
-      );
-    });
-  };
-  
-
 return (
   <ScrollView contentContainerStyle={styles.container}>
     <View style={styles.formContainer}>
