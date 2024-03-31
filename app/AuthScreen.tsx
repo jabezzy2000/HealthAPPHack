@@ -1,10 +1,28 @@
+import 'react-native-get-random-values';
 import React, { useState } from 'react';
+import * as Keychain from 'react-native-keychain';
 import { View, Text, TextInput, TouchableOpacity, StyleSheet, ScrollView, Alert } from 'react-native';
 import { Picker } from '@react-native-picker/picker';
 import { useNavigation } from '@react-navigation/native'; // Import useNavigation hook
 import { AuthScreenNavigationProp } from './navigationTypes'
+import AsyncStorage from '@react-native-async-storage/async-storage';
+import Parse from 'parse/react-native';
+
+
+
+// //Before using the SDK...
+// Parse.setAsyncStorage(AsyncStorage);
+//     //Paste below the Back4App Application ID AND the JavaScript KEY
+// Parse.initialize('gnQ5OLyRrsSME4wp1F6c1iVa6x5HD5IKIMY2MMBG', 'x2KL2OTnMjOhzSXgQJBpxyDq3nTDFEzWMMN7chMX');
+//     //Point to Back4App Parse API address 
+// Parse.serverURL = 'https://parseapi.back4app.com/'
 
 type UserType = 'Health Organization' | 'Government Organization' | 'Private Organization' | 'Individual';
+Parse.setAsyncStorage(AsyncStorage);
+Parse.initialize("gnQ5OLyRrsSME4wp1F6c1iVa6x5HD5IKIMY2MMBG", "x2KL2OTnMjOhzSXgQJBpxyDq3nTDFEzWMMN7chMX");
+Parse.serverURL = 'https://parseapi.back4app.com/';
+
+
 
 const AuthScreen = () => {
   const navigation = useNavigation<AuthScreenNavigationProp>(); // Initialize useNavigation hook
@@ -15,17 +33,91 @@ const AuthScreen = () => {
   const [email, setEmail] = useState('');
   const [password, setPassword] = useState('');
 
-  const handleAuth = () => {
-    // Placeholder for sign-up or sign-in logic
-    console.log(userType, username, email, password);
-    // Simulating successful authentication for demo purposes
-    if (username && password) {
-       // Set authenticated state to true
-       navigation.navigate('TabLayout');// Navigate to authenticated layout
+  const handleAuth = async () => {
+    if (isSignUp) {
+      // Signing up a new user with Parse
+      try {
+        const user = new Parse.User();
+        user.set('username', username);
+        user.set('email', email);
+        user.set('password', password);
+        user.set('userType', userType); // Custom attribute
+
+        await user.signUp();
+        Alert.alert('Success', 'User registered successfully');
+        navigation.navigate('TabLayout'); // Adjust as needed
+      } catch (error) {
+        let errorMessage = 'An unexpected error occurred';
+        if (error instanceof Error) {
+          console.error(isSignUp ? 'Registration Failed' : 'Login Failed', error.message);
+          errorMessage = error.message;
+        } else {
+          // Log the error differently or handle non-Error objects
+          console.error(isSignUp ? 'Registration Failed' : 'Login Failed', 'An unknown error occurred');
+        }
+        Alert.alert('Error', errorMessage);
+      }
+      
     } else {
-      Alert.alert('Error', 'Please enter username and password');
+      // Logging in an existing user with Parse
+      try {
+        const user = await Parse.User.logIn(username, password);
+        Alert.alert('Success', 'Login successful');
+        navigation.navigate('TabLayout'); // Adjust as needed
+      } catch (error) {
+        let errorMessage = 'An unexpected error occurred';
+        if (error instanceof Error) {
+          console.error(isSignUp ? 'Registration Failed' : 'Login Failed', error.message);
+          errorMessage = error.message;
+        } else {
+          // Log the error differently or handle non-Error objects
+          console.error(isSignUp ? 'Registration Failed' : 'Login Failed', 'An unknown error occurred');
+        }
+        Alert.alert('Error', errorMessage);
+      }
+      
     }
   };
+
+
+
+
+  // const handleAuth = async () => {
+  //   const url = isSignUp ? 'https://http://10.26.140.164/register' : 'https://http://10.26.140.164/login'; // Use HTTPS
+
+  //   try {
+  //     const response = await fetch(url, {
+  //       method: 'POST',
+  //       headers: { 'Content-Type': 'application/json' },
+  //       body: JSON.stringify({ username, email, password }),
+  //     });
+
+  //     const data = await response.json();
+
+  //     if (response.ok) {
+  //       await Keychain.setGenericPassword('token', data.token); // Securely save the token
+  //       Alert.alert(isSignUp ? 'Success' : 'Logged In', isSignUp ? 'Registration Successful' : 'Login Successful');
+  //       navigation.navigate('TabLayout'); // Navigate to your main screen
+  //     } else {
+  //       throw new Error(data.error || 'An error occurred');
+  //     }
+  //   } catch (error) {
+  //     // Since error is of type unknown, we perform a type check before accessing .message
+  //     let errorMessage = 'An error occurred'; // Default message
+  //     if (error instanceof Error) {
+  //       // Now TypeScript knows error is an Error object, so we can access .message
+  //       console.error(isSignUp ? 'Registration Failed' : 'Login Failed', error.message);
+  //       errorMessage = error.message;
+  //     } else {
+  //       // If it's not an Error instance, you might handle it differently
+  //       console.error(isSignUp ? 'Registration Failed' : 'Login Failed', error);
+  //     }
+    
+  //     Alert.alert('Error', errorMessage);
+  //   }
+    
+  // };
+
 
   return (
     <ScrollView contentContainerStyle={styles.container}>
