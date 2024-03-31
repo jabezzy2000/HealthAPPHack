@@ -16,11 +16,14 @@ const ProfilePage = () => {
       <Text style={styles.nameText}>John Doe</Text>
       <Text style={styles.headerText}>Profile</Text>
 
-      {/* Map Views */}
-      <View style={styles.mapContainer}>
-        <MapView style={styles.map} />
-        <MapView style={styles.map} />
-      </View>
+      {/* Recent Analysis */}
+      <Text style={styles.recentAnalysisHeader}>Recent Analysis</Text>
+
+      {/* First Map */}
+      <MapView style={styles.map} />
+
+      {/* Second Map */}
+      <MapView style={styles.map} />
 
       {/* Text Aligned to the Right */}
       <View style={styles.rightAlignedTextContainer}>
@@ -55,14 +58,15 @@ const styles = StyleSheet.create({
     fontWeight: 'bold',
     marginBottom: 20,
   },
-  mapContainer: {
-    flexDirection: 'row',
-    justifyContent: 'space-between',
-    marginBottom: 20,
+  recentAnalysisHeader: {
+    fontSize: 20,
+    fontWeight: 'bold',
+    marginBottom: 10,
   },
   map: {
-    width: '48%', // Adjust as needed
-    aspectRatio: 1,
+    width: '100%', // Take full width
+    aspectRatio: 1, // Maintain aspect ratio
+    marginBottom: 20, // Add margin between maps
   },
   rightAlignedTextContainer: {
     alignItems: 'flex-end',
