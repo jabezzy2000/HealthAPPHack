@@ -4,10 +4,7 @@ import AsyncStorage from '@react-native-async-storage/async-storage';
 import { ScrollView, View, Button, TextInput, StyleSheet, TouchableOpacity, Text } from 'react-native';
 import * as Location from 'expo-location';
 import * as DocumentPicker from 'expo-document-picker';
-<<<<<<< Updated upstream
 import * as FileSystem from 'expo-file-system';
-=======
->>>>>>> Stashed changes
 import { Alert } from 'react-native';
 
 Parse.setAsyncStorage(AsyncStorage);
@@ -97,7 +94,6 @@ const App = () => {
     const result = await DocumentPicker.getDocumentAsync({});
   
     if (result.type === 'success') {
-<<<<<<< Updated upstream
       // Read the File Content
       const fileContent = await FileSystem.readAsStringAsync(result.uri);
   
@@ -120,7 +116,6 @@ const App = () => {
         console.error("Failed to send data to API:", error);
         Alert.alert('Error', 'Failed to process file.');
       }
-=======
         console.log(result);
   
         // Example variables - replace these with actual values from your app context
@@ -169,7 +164,6 @@ const App = () => {
         Alert.alert('Cancelled', 'File selection was cancelled.');
     } else {
         Alert.alert('Error', 'An unexpected error occurred.');
->>>>>>> Stashed changes
     }
   };
   
