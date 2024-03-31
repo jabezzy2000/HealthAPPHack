@@ -1,77 +1,167 @@
-import React from 'react';
-import { SafeAreaView, View, Text, StyleSheet, ScrollView } from 'react-native';
-import MapView from 'react-native-maps';
+import React, { useState, useEffect } from 'react';
+import { SafeAreaView, View, Text, StyleSheet, ScrollView, Dimensions } from 'react-native';
+import MapView, { Marker } from 'react-native-maps';
+import * as Location from 'expo-location';
+import Parse from 'parse/react-native';
+import { useSafeAreaInsets } from 'react-native-safe-area-context';
+
+interface LocationData {
+  id: string;
+  latitude: number;
+  longitude: number;
+  name: string;
+}
+
+interface Disease {
+  id: string;
+  latitude: number;
+  longitude: number;
+  name: string; // Ensure this matches the properties you use
+}
+
+
 
 const HomePage = () => {
+  const insets = useSafeAreaInsets();
+  const screenWidth = Dimensions.get('window').width;
+  // Adjust the map's height dynamically based on safe area insets
+  const dynamicMapHeight = (Dimensions.get('window').height - insets.top - insets.bottom) * 0.5;
+  
+
+  const [location, setLocation] = useState<{
+    latitude: number;
+    longitude: number;
+    latitudeDelta: number;
+    longitudeDelta: number;
+  } | undefined>(undefined);
+  const [activeMapIndex, setActiveMapIndex] = useState(0); // 0 for diseases, 1 for symptoms
+  const [diseases, setDiseases] = useState([]);
+  const [symptoms, setSymptoms] = useState([]);
+
+  useEffect(() => {
+    (async () => {
+      let { status } = await Location.requestForegroundPermissionsAsync();
+      if (status !== 'granted') {
+        console.error('Permission to access location was denied');
+        return;
+      }
+
+      let currentLocation = await Location.getCurrentPositionAsync({});
+      setLocation({
+        latitude: currentLocation.coords.latitude,
+        longitude: currentLocation.coords.longitude,
+        latitudeDelta: 0.0922,
+        longitudeDelta: 0.0421,
+      });
+
+      // Fetch diseases and symptoms from Parse
+      // Assuming fetchDiseases and fetchSymptoms are implemented
+    })();
+  }, []);
+
   return (
-    <SafeAreaView style={styles.safeArea}>
-      <View style={styles.container}>
-        <View style={styles.mapContainer}>
-          <MapView
-            style={styles.map}
-            initialRegion={{
-              latitude: 38.89511, // Example coordinates for Washington, DC
-              longitude: -77.03637,
-              latitudeDelta: 0.0922,
-              longitudeDelta: 0.0421,
-            }}
-          />
-        </View>
-        <View style={styles.diseasesContainer}>
-          <Text style={styles.diseasesTitle}>Most prevalent in Washington, DC</Text>
-          <View style={styles.diseaseList}>
-            <Text>HIV</Text><Text>COVID</Text>
-            <Text>Cholera</Text><Text>Malaria</Text>
-          </View>
-        </View>
-        <ScrollView style={styles.newsContainer}>
-          <Text style={styles.newsItem}>News Item 1</Text>
-          <Text style={styles.newsItem}>News Item 2</Text>
-          {/* Add more sample news items here */}
-        </ScrollView>
+    <SafeAreaView style={{ flex: 1 }}>
+      {/* Label indicating the current map */}
+      <View style={styles.labelContainer}>
+        <Text style={styles.mapLabel}>
+          {activeMapIndex === 0 ? 'Diseases Map' : 'Symptoms Map'}
+        </Text>
       </View>
+
+      <ScrollView
+        horizontal
+        pagingEnabled
+        showsHorizontalScrollIndicator
+        style={[styles.scrollView, {height: dynamicMapHeight}]}
+        onMomentumScrollEnd={(event) => {
+          const currentPage = event.nativeEvent.contentOffset.x / screenWidth;
+          setActiveMapIndex(Math.round(currentPage));
+        }}
+      >
+        {/* Diseases Map with rounded edges */}
+        <View style={[styles.mapContainer, { width: screenWidth, borderRadius: 20, overflow: 'hidden' }]}>
+          <MapView
+            style={[styles.map, {height: dynamicMapHeight}]}
+            initialRegion={location}
+          >
+            {/* Markers for diseases */}
+          </MapView>
+        </View>
+
+        {/* Symptoms Map with rounded edges */}
+        <View style={[styles.mapContainer, { width: screenWidth, borderRadius: 20, overflow: 'hidden' }]}>
+          <MapView
+            style={[styles.map, {height: dynamicMapHeight}]}
+            initialRegion={location}
+          >
+            {/* Markers for symptoms */}
+          </MapView>
+        </View>
+      </ScrollView>
     </SafeAreaView>
   );
 };
 
+  // return (
+  //   <SafeAreaView style={{ flex: 1 }}>
+  //     <ScrollView
+  //       horizontal
+  //       pagingEnabled
+  //       showsHorizontalScrollIndicator
+  //       style={[styles.scrollView, {height: dynamicMapHeight}]}
+  //       onMomentumScrollEnd={(event) => {
+  //         const currentPage = event.nativeEvent.contentOffset.x / screenWidth;
+  //         setActiveMapIndex(Math.round(currentPage));
+  //       }}
+  //     >
+  //       {/* Diseases Map */}
+  //       <View style={[styles.mapContainer, { width: screenWidth }]}>
+  //         <MapView
+  //           style={[styles.map, {height: dynamicMapHeight}]}
+  //           initialRegion={location}
+  //         >
+  //           {/* Assuming diseases array is populated with { latitude, longitude, id } objects */}
+  //           {activeMapIndex === 0 && diseases.map((disease) => (
+  //             <Marker
+  //               key={disease.id}
+  //               coordinate={{ latitude: disease.latitude, longitude: disease.longitude }}
+  //               title={disease.name}
+  //             />
+  //           ))}
+  //         </MapView>
+  //       </View>
+
+  //       {/* Symptoms Map */}
+  //       <View style={[styles.mapContainer, { width: screenWidth }]}>
+  //         <MapView
+  //           style={[styles.map, {height: dynamicMapHeight}]}
+  //           initialRegion={location}
+  //         >
+  //           {/* Assuming symptoms array is populated similarly */}
+  //           {activeMapIndex === 1 && symptoms.map((symptom) => (
+  //             <Marker
+  //               key={symptom.id}
+  //               coordinate={{ latitude: symptom.latitude, longitude: symptom.longitude }}
+  //               title={symptom.name}
+  //             />
+  //           ))}
+  //         </MapView>
+  //       </View>
+  //     </ScrollView>
+  //   </SafeAreaView>
+  // );
+
+
 const styles = StyleSheet.create({
-  safeArea: {
-    flex: 1,
-    backgroundColor: '#fff', // or any desired background color
-  },
-  container: {
-    flex: 1,
+  scrollView: {
+    // Dynamic height is set inline
   },
   mapContainer: {
-    height: '30%', // Increased from 25% to 30% for more length
-    borderRadius: 20, // Adds rounded corners
-    overflow: 'hidden', // Ensures the map view respects the container's borderRadius
-    margin: 10, // Optional: adds some margin around the map for spacing
+    // Width is set inline to take full screen width
+    // Height adjustments are now inline, respecting the safe area
   },
   map: {
-    width: '100%',
-    height: '100%',
-  },
-  diseasesContainer: {
-    flex: 1, // Adjust if necessary
-    padding: 10,
-  },
-  diseasesTitle: {
-    fontWeight: 'bold',
-  },
-  diseaseList: {
-    flexDirection: 'row',
-    justifyContent: 'space-around',
-    marginTop: 10,
-  },
-  newsContainer: {
-    flex: 2, // Adjust if necessary
-  },
-  newsItem: {
-    margin: 10,
-    backgroundColor: '#f0f0f0',
-    padding: 20,
-    borderRadius: 10,
+    // Width and height adjustments are now inline
   },
 });
 
