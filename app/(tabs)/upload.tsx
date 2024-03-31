@@ -117,45 +117,129 @@ const App = () => {
     }
   };
 
+  // const handleSubmit = async () => {
+  //   try {
+  //     const userId = await getCurrentUserId();
+  //     const location = await getCurrentLocation();
+  //     const authToken = await AsyncStorage.getItem('authToken');
+
+  //     if (!userId || !location || !authToken) {
+  //       console.error('Missing userId, location, or authToken');
+  //       return;
+  //     }
+
+  //     let apiEndpoint = selectedButton === 'Symptoms' ? '/submit_symptom' : '/submit_disease';
+  //     let data = {
+  //       user_id: userId,
+  //       location,
+  //       ...formData,
+  //     };
+
+  //     const response = await fetch(`http://10.26.140.164${apiEndpoint}`, {
+  //       method: 'POST',
+  //       headers: {
+  //         'Content-Type': 'application/json',
+  //         'Authorization': `Bearer ${authToken}`,
+  //       },
+  //       body: JSON.stringify(data),
+  //     });
+
+  //     const responseData = await response.json();
+  //     if (response.ok) {
+  //       console.log('Submission Successful', responseData);
+  //       // Reset form or navigate to another screen
+  //     } else {
+  //       console.error('Submission Failed', responseData.error);
+  //     }
+  //   } catch (error) {
+  //     console.error('Error in submission', error);
+  //   }
+  // };
+
   const handleSubmit = async () => {
     try {
-      const userId = await getCurrentUserId();
-      const location = await getCurrentLocation();
-      const authToken = await AsyncStorage.getItem('authToken');
-
-      if (!userId || !location || !authToken) {
-        console.error('Missing userId, location, or authToken');
-        return;
-      }
-
-      let apiEndpoint = selectedButton === 'Symptoms' ? '/submit_symptom' : '/submit_disease';
-      let data = {
-        user_id: userId,
-        location,
-        ...formData,
-      };
-
-      const response = await fetch(`http://10.26.140.164${apiEndpoint}`, {
-        method: 'POST',
-        headers: {
-          'Content-Type': 'application/json',
-          'Authorization': `Bearer ${authToken}`,
-        },
-        body: JSON.stringify(data),
-      });
-
-      const responseData = await response.json();
-      if (response.ok) {
-        console.log('Submission Successful', responseData);
-        // Reset form or navigate to another screen
+      if (userType === 'Individual') {
+        const currentUser = Parse.User.current();
+        if (!currentUser) {
+          console.error('No user is currently logged in');
+          return;
+        }
+        
+        const location = await getCurrentLocation();
+        if (!location) {
+          console.error('Failed to get location');
+          return;
+        }
+        const locationGeoPoint = new Parse.GeoPoint(location.latitude, location.longitude);
+        
+        let objectsToSave = [];
+  
+        // Define the array to hold pointers to the saved objects for the uploads field
+        let uploadsPointers = [];
+  
+        if (selectedButton === 'Symptoms') {
+          const symptomsArray = formData.symptoms.split(',');
+          symptomsArray.forEach(symptom => {
+            const Symptoms = Parse.Object.extend("Symptoms");
+            const symptomObj = new Symptoms();
+            
+            symptomObj.set("symptom", symptom.trim());
+            symptomObj.set("location", locationGeoPoint);
+            symptomObj.set("start_date", formData.startDate);
+            symptomObj.set("end_date", formData.endDate);
+            symptomObj.set("user", currentUser); // Directly associating the user
+            
+            objectsToSave.push(symptomObj);
+          });
+        } else if (selectedButton === 'Sickness') {
+          const Disease = Parse.Object.extend("Disease");
+          const diseaseObj = new Disease();
+          
+          diseaseObj.set("Disease_Name", formData.diagnosisName);
+          diseaseObj.set("modeOfConfirmation", formData.modeOfConfirmation);
+          diseaseObj.set("location", locationGeoPoint);
+          diseaseObj.set("user", currentUser); // Directly associating the user
+          
+          objectsToSave.push(diseaseObj);
+        }
+  
+        // Save all objects to Parse in one batch operation
+        const savedObjects = await Parse.Object.saveAll(objectsToSave);
+        
+        // Collect pointers to the saved objects
+        savedObjects.forEach(obj => uploadsPointers.push(obj.toPointer()));
+  
+        // Append new object pointers to the existing uploads array
+        currentUser.addUnique("uploads", uploadsPointers);
+        await currentUser.save();
+  
+        console.log('Submission Successful');
+        
+        // Reset form
+        setFormData({
+          dateOfDiagnosis: '',
+          modeOfConfirmation: '',
+          diagnosisName: '',
+          age: '',
+          symptoms: '',
+          startDate: '',
+          endDate: '',
+        });
+        setSelectedButton(null);
+        
+        // Show success message
+        Alert.alert('Success', 'Your submission has been successful.');
       } else {
-        console.error('Submission Failed', responseData.error);
+        console.log('User type is not Individual. Skipping Parse submission.');
       }
     } catch (error) {
-      console.error('Error in submission', error);
+      console.error('Error in submission:', error);
+      Alert.alert('Error', 'Failed to submit your data. Please try again.');
     }
   };
-
+  
+  
+  
 
  
 
@@ -202,6 +286,14 @@ const renderContentBasedOnUserType = () => {
                   placeholderTextColor="#000000"
                   editable={!present}
                 />
+                  <TextInput
+                  style={styles.input}
+                  onChangeText={(text) => handleInputChange('age', text)}
+                  value={formData.age}
+                  placeholder="Current Age"
+                  placeholderTextColor="#000000"
+                  editable={!present}
+                />
               </View>
             )}
             {selectedButton === 'Sickness' && (
@@ -225,6 +317,13 @@ const renderContentBasedOnUserType = () => {
                   onChangeText={(text) => handleInputChange('diagnosisName', text)}
                   value={formData.diagnosisName}
                   placeholder="Name of Diagnosis"
+                  placeholderTextColor="#000000"
+                />
+                  <TextInput
+                  style={styles.input}
+                  onChangeText={(text) => handleInputChange('age', text)}
+                  value={formData.age}
+                  placeholder="Current Age"
                   placeholderTextColor="#000000"
                 />
                 {/* Additional TextInput for age was not shown for Sickness, but you can add it if needed */}
