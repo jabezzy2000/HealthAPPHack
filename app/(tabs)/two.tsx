@@ -20,7 +20,17 @@ const ProfilePage = () => {
       <Text style={styles.recentAnalysisHeader}>Recent Analysis</Text>
 
       {/* First Map */}
-      <MapView style={styles.map} />
+      <View style={styles.mapContainer}>
+          <MapView
+            style={styles.map}
+            initialRegion={{
+              latitude: 38.89511, // Example coordinates for Washington, DC
+              longitude: -77.03637,
+              latitudeDelta: 0.0922,
+              longitudeDelta: 0.0421,
+            }}
+          />
+        </View>
 
       {/* Second Map */}
       <MapView style={styles.map} />
@@ -37,6 +47,12 @@ const styles = StyleSheet.create({
   container: {
     flexGrow: 1,
     padding: 20,
+  },
+  mapContainer: {
+    height: '30%', // Increased from 25% to 30% for more length
+    borderRadius: 20, // Adds rounded corners
+    overflow: 'hidden', // Ensures the map view respects the container's borderRadius
+    margin: 10, // Optional: adds some margin around the map for spacing
   },
   profilePicture: {
     width: 100,

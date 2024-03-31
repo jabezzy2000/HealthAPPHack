@@ -1,10 +1,14 @@
 import React, { useState } from 'react';
-import { View, Text, TextInput, TouchableOpacity, StyleSheet, ScrollView } from 'react-native';
+import { View, Text, TextInput, TouchableOpacity, StyleSheet, ScrollView, Alert } from 'react-native';
 import { Picker } from '@react-native-picker/picker';
+import { useNavigation } from '@react-navigation/native'; // Import useNavigation hook
+import { AuthScreenNavigationProp } from './navigationTypes'
 
 type UserType = 'Health Organization' | 'Government Organization' | 'Private Organization' | 'Individual';
 
 const AuthScreen = () => {
+  const navigation = useNavigation<AuthScreenNavigationProp>(); // Initialize useNavigation hook
+
   const [isSignUp, setIsSignUp] = useState(true);
   const [userType, setUserType] = useState<UserType | undefined>(undefined);
   const [username, setUsername] = useState('');
@@ -14,6 +18,13 @@ const AuthScreen = () => {
   const handleAuth = () => {
     // Placeholder for sign-up or sign-in logic
     console.log(userType, username, email, password);
+    // Simulating successful authentication for demo purposes
+    if (username && password) {
+       // Set authenticated state to true
+       navigation.navigate('TabLayout');// Navigate to authenticated layout
+    } else {
+      Alert.alert('Error', 'Please enter username and password');
+    }
   };
 
   return (
