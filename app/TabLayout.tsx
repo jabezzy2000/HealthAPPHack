@@ -13,7 +13,9 @@ import { useClientOnlyValue } from '@/components/useClientOnlyValue';
 // Importing screens from the tabs folder
 import TabOneScreen from './(tabs)/index';
 import TabTwoScreen from './(tabs)/two';
+import TabFourScreen from './(tabs)/PathwayPage';
 import TabThreeScreen from './(tabs)/upload';
+
 
 const Tab = createBottomTabNavigator();
 
@@ -34,7 +36,10 @@ export default function TabLayout() {
             iconName = 'home'; // choose an appropriate icon
           } else if (route.name === 'Profile') {
             iconName = 'user'; // choose an appropriate icon
-          } else if (route.name === 'Upload') {
+          } else if (route.name === 'Pathway') {
+            iconName = 'check'; // choose an appropriate icon
+          } 
+          else if (route.name === 'Upload') {
             iconName = 'upload'; // choose an appropriate icon
           }
           // Use the TabBarIcon component for rendering icons
@@ -53,6 +58,11 @@ export default function TabLayout() {
         name="Upload"
         component={TabThreeScreen}
         options={{ title: 'Upload' }}
+      />
+      <Tab.Screen
+        name="Pathway"
+        component={TabFourScreen}
+        options={{ title: 'Ideas' }}
       />
       <Tab.Screen
         name="Profile"

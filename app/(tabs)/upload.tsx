@@ -4,7 +4,10 @@ import AsyncStorage from '@react-native-async-storage/async-storage';
 import { ScrollView, View, Button, TextInput, StyleSheet, TouchableOpacity, Text } from 'react-native';
 import * as Location from 'expo-location';
 import * as DocumentPicker from 'expo-document-picker';
+<<<<<<< Updated upstream
 import * as FileSystem from 'expo-file-system';
+=======
+>>>>>>> Stashed changes
 import { Alert } from 'react-native';
 
 Parse.setAsyncStorage(AsyncStorage);
@@ -89,9 +92,12 @@ const App = () => {
     return location.coords;
   };
 
+  
   const handleFileUpload = async () => {
-    let result = await DocumentPicker.getDocumentAsync({});
+    const result = await DocumentPicker.getDocumentAsync({});
+  
     if (result.type === 'success') {
+<<<<<<< Updated upstream
       // Read the File Content
       const fileContent = await FileSystem.readAsStringAsync(result.uri);
   
@@ -114,8 +120,77 @@ const App = () => {
         console.error("Failed to send data to API:", error);
         Alert.alert('Error', 'Failed to process file.');
       }
+=======
+        console.log(result);
+  
+        // Example variables - replace these with actual values from your app context
+        const userId = "exampleUserId";
+        const authToken = "exampleAuthToken";
+        const apiEndpoint = '/compute'; // Endpoint for your Python API
+  
+        // Fetch the file content
+        const fileContent = await fetch(result.uri);
+        const textContent = await fileContent.text();
+  
+        // Convert CSV text to JSON array
+        // This requires a CSV parsing function, like one you might write yourself or get from a library
+        const jsonData = parseCsvToJson(textContent); // You need to implement this function or use a CSV parsing library
+  
+        // Prepare data for the API
+        let data = jsonData.map(entry => ({
+            ...entry,
+            user_id: userId, // Assuming you want to attach the user ID to each entry
+            // Add other necessary transformations if needed
+        }));
+  
+        // Send processed data to the API
+        try {
+            const response = await fetch(`http://10.26.140.164${apiEndpoint}`, {
+                method: 'POST',
+                headers: {
+                    'Content-Type': 'application/json',
+                    'Authorization': `Bearer ${authToken}`,
+                },
+                body: JSON.stringify(data),
+            });
+  
+            const responseData = await response.json();
+            if (response.ok) {
+                Alert.alert('Data Processed', responseData.message);
+            } else {
+                console.error('Failed to process file', responseData.error);
+                Alert.alert('Error', 'Failed to process the file.');
+            }
+        } catch (error) {
+            console.error('There was a problem with your fetch operation:', error);
+            Alert.alert('Error', 'There was a problem uploading your file.');
+        }
+    } else if (result.type === 'cancel') {
+        Alert.alert('Cancelled', 'File selection was cancelled.');
+    } else {
+        Alert.alert('Error', 'An unexpected error occurred.');
+>>>>>>> Stashed changes
     }
   };
+  
+  function parseCsvToJson(csvText) {
+    // Split the text into lines
+    const lines = csvText.trim().split('\n');
+
+    // Extract headers
+    const headers = lines.shift().split(',');
+
+    // Map each line to a JSON object
+    const jsonData = lines.map(line => {
+        const values = line.split(',');
+        return headers.reduce((obj, header, index) => {
+            obj[header] = values[index];
+            return obj;
+        }, {});
+    });
+
+    return jsonData;
+}
 
   // const handleSubmit = async () => {
   //   try {
