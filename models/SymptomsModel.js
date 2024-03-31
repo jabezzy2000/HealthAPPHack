@@ -4,6 +4,7 @@ export class SymptomsModel {
       this.name = name;
       this.description = description;
       this.location = location;
+      this.age = age;
     
     }
   

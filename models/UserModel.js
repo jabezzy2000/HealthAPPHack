@@ -1,9 +1,10 @@
 export class UserModel {
-    constructor({ id, username, email, password }) {
+    constructor({ id, username, email, password,type }) {
       this.id = id;
       this.username = username;
       this.email = email;
       this.password = password;
+      this.type =  type;
       //user probably needs to have an image
     }
   
